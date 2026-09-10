@@ -1,35 +1,149 @@
-# Listening Companion privacy and data boundary
+# Listening Companion のプライバシーとデータ境界
 
-This document describes the local MVP behavior. It is not legal advice and does not replace a product-specific privacy policy or a review of current SoundCloud terms and applicable law.
+この文書では、ローカル MVP の動作について説明します。
 
-## Data that may be processed
+これは**法的助言ではなく**、製品固有のプライバシーポリシーや、最新の SoundCloud 利用規約および適用法令の確認に代わるものではありません。
 
-After the user explicitly starts the local OAuth flow, the service may receive the authenticated user's profile, recent plays, likes, playlists, followings, and public search/resource responses from SoundCloud. Those records are held in process memory only while a request/session result is usable. They are used by local, deterministic string/rule scoring and by the loopback viewer.
+## 処理される可能性のあるデータ
 
-The model-facing MCP response contains only app-owned status, counts, opaque result IDs, expiry information, warnings, and loopback viewer URLs. It does not contain provider titles, descriptions, artist names, provider URLs, IDs as human-readable metadata, raw JSON, or access/refresh tokens. The viewer is the place where a person can inspect provider metadata and follow an attributed SoundCloud link.
+ユーザーが明示的にローカル OAuth フローを開始した後、サービスは SoundCloud から以下の情報を受け取る場合があります。
 
-## What is not stored
+- 認証されたユーザーのプロフィール
+- 最近再生したコンテンツ
+- いいね
+- プレイリスト
+- フォロー情報
+- 公開検索結果／リソースのレスポンス
 
-- No raw ChatGPT conversation, memory enumeration, prompt transcript, or model-generated free-form memory is stored.
-- No SoundCloud track, playlist, user, or history payload is stored in SQLite, JSON archives, logs, or the plugin folder.
-- No listening-history archive is built. The recently-played endpoint is read as a bounded, current source and is not accumulated.
-- No audio is downloaded, copied, fingerprinted, streamed, or made available offline.
-- No embeddings, model calls, training, fine-tuning, or external recommendation service receives SoundCloud User Content.
+これらのレコードは、リクエストまたはセッションの結果が利用可能な期間に限り、**プロセスのメモリ内だけに保持**されます。
 
-## Optional preference storage
+これらのデータは、ローカルで動作する決定論的な文字列／ルールベースのスコアリング、およびループバックビューアーによって使用されます。
 
-The user may explicitly save a bounded `preference_profile` by calling `save_preferences` with `consent: true`. The stored profile contains only structured preference fields such as genres, podcast topics, languages, preferred creators, avoid terms, a preferred duration, and a discovery level. It is not automatically saved from a conversation. It can be read or deleted with the preferences tools. The SQLite database is outside the plugin directory by default and should be protected as user-private data.
+モデル側から見える MCP レスポンスに含まれるのは、アプリが所有する以下の情報のみです。
 
-## Tokens and disconnect
+- ステータス
+- 件数
+- 不透明な result ID
+- 有効期限情報
+- 警告
+- ループバックビューアーの URL
 
-Access and refresh tokens are session-only in this MVP. They are held by the running process, never written to a plaintext token file, never included in MCP content, and never written to normal logs. `disconnect_account` clears the in-memory token, provider/result/cursor state, and pending OAuth flows. Exiting the process also removes the token from memory. It does not claim that a remote provider session has been revoked; users should also revoke access through SoundCloud if required.
+以下の情報は含まれません。
 
-## Local viewer security
+- プロバイダー上のタイトル
+- 説明文
+- アーティスト名
+- プロバイダー URL
+- 人間が読めるメタデータとしての ID
+- 生の JSON
+- アクセストークン／リフレッシュトークン
 
-The viewer binds to loopback by default, uses an unguessable short-lived capability URL, sets an `HttpOnly`/`SameSite=Strict` cookie after capability validation, and escapes all provider text before HTML rendering. It is intended for the same user on the same machine. Do not bind it to `0.0.0.0`, proxy it publicly, or reuse its URLs as durable public links.
+プロバイダーのメタデータをユーザーが確認し、適切に帰属表示された SoundCloud リンクを開くための場所は**ビューアー**です。
 
-## Provider and legal limits
+## 保存されないもの
 
-SoundCloud's [API Terms of Use](https://developers.soundcloud.com/docs/api/terms-of-use) state that API content is User Content, restrict its use as an input to AI technologies, prohibit persistent provider-content caching, and require attribution and backlinks when displaying content. The implementation adopts a conservative app/model exposure boundary, but that does not certify live use. Review the current terms, obtain any needed rights/permissions, publish an appropriate privacy policy, and confirm host-specific OAuth/MCP requirements before connecting a real account.
+- 生の ChatGPT 会話、メモリの列挙結果、プロンプトの記録、モデルによって生成された自由形式のメモリは保存されません。
+- SoundCloud のトラック、プレイリスト、ユーザー、履歴のペイロードは、SQLite、JSON アーカイブ、ログ、プラグインフォルダのいずれにも保存されません。
+- 再生履歴のアーカイブは作成されません。「最近再生したコンテンツ」のエンドポイントは、件数に上限を設けた現在時点の情報源として読み取るだけで、継続的に蓄積されることはありません。
+- 音声のダウンロード、コピー、フィンガープリント作成、ストリーミング取得、オフライン利用可能化は行いません。
+- SoundCloud の User Content が、Embedding、モデル呼び出し、学習、ファインチューニング、外部のレコメンデーションサービスへ送信されることはありません。
 
-This repository contains a local stdio service and loopback viewer only. It is not a direct ChatGPT-Web remote integration, does not host a public website, and does not deploy an OAuth callback service. The MIT license permits reuse under its terms, but it does not grant SoundCloud rights, API approval, or permission to use provider content beyond applicable agreements.
+## オプションのユーザー設定保存
+
+ユーザーは、`save_preferences` を `consent: true` とともに呼び出すことで、制限された `preference_profile` を明示的に保存できます。
+
+保存されるプロフィールには、以下のような**構造化された嗜好情報のみ**が含まれます。
+
+- ジャンル
+- ポッドキャストのトピック
+- 言語
+- 好みのクリエイター
+- 除外したい用語
+- 希望する再生時間
+- discovery level
+
+これらは会話内容から自動的に保存されるものではありません。
+
+preferences 関連ツールを使用して、保存されたプロフィールを読み出したり削除したりできます。
+
+SQLite データベースはデフォルトでプラグインディレクトリの外部に配置され、**ユーザーの非公開データとして適切に保護する必要があります**。
+
+## トークンと切断
+
+この MVP では、アクセストークンとリフレッシュトークンは**セッション中のみ保持**されます。
+
+これらは以下のように扱われます。
+
+- 実行中のプロセス内にのみ保持される
+- 平文のトークンファイルへ書き込まれない
+- MCP コンテンツへ含まれない
+- 通常のログへ書き込まれない
+
+`disconnect_account` を実行すると、以下が削除されます。
+
+- メモリ上のトークン
+- プロバイダー関連の状態
+- 結果の状態
+- カーソルの状態
+- 保留中の OAuth フロー
+
+プロセスを終了した場合も、トークンはメモリから消去されます。
+
+ただし、これは**リモート側のプロバイダーセッションまで無効化されたことを保証するものではありません**。
+
+必要な場合、ユーザーは SoundCloud 側からもアクセス権を取り消す必要があります。
+
+## ローカルビューアーのセキュリティ
+
+ビューアーはデフォルトでループバックインターフェースに bind します。
+
+また、以下のセキュリティ対策を使用します。
+
+- 推測困難で短時間のみ有効な capability URL
+- capability 検証後に設定される `HttpOnly` / `SameSite=Strict` Cookie
+- HTML をレンダリングする前に、すべてのプロバイダー由来テキストをエスケープ
+
+これは**同一マシンを使用している同一ユーザー向け**に設計されています。
+
+以下のような使い方はしないでください。
+
+- `0.0.0.0` に bind する
+- 公開プロキシ経由でインターネットへ公開する
+- ビューアー URL を恒久的な公開リンクとして再利用する
+
+## プロバイダーおよび法的な制限
+
+SoundCloud の [API Terms of Use](https://developers.soundcloud.com/docs/api/terms-of-use) では、API コンテンツは **User Content** とされています。
+
+また、以下のような制限・要件が定められています。
+
+- User Content を AI 技術への入力として使用することへの制限
+- プロバイダーコンテンツの永続的キャッシュの禁止
+- コンテンツ表示時の帰属表示およびバックリンクの要求
+
+この実装では、アプリとモデル間で公開されるデータについて保守的な境界を採用しています。
+
+しかし、これは**ライブ環境での利用が法的・契約的に問題ないことを保証するものではありません**。
+
+実際のアカウントを接続する前に、以下を行ってください。
+
+- 最新の利用規約を確認する
+- 必要な権利や許諾を取得する
+- 適切なプライバシーポリシーを公開する
+- 使用するホスト固有の OAuth / MCP 要件を確認する
+
+このリポジトリに含まれているのは、**ローカル stdio サービスとループバックビューアーのみ**です。
+
+これは以下のものではありません。
+
+- ChatGPT Web と直接接続するリモート統合
+- 公開 Web サイトをホストするもの
+- OAuth callback サービスをデプロイするもの
+
+MIT License により、そのライセンス条件に従ったコードの再利用は認められています。
+
+ただし、MIT License は以下を付与するものではありません。
+
+- SoundCloud に関する権利
+- SoundCloud API の利用承認
+- 適用される契約を超えてプロバイダーコンテンツを利用する権限
