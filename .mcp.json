@@ -1,0 +1,24 @@
+{
+  "mcpServers": {
+    "listening-companion": {
+      "command": "python3",
+      "args": ["./scripts/run_mcp.py"],
+      "cwd": ".",
+      "env": {
+        "LISTENING_COMPANION_VIEWER_HOST": "127.0.0.1"
+      },
+      "env_vars": [
+        "SOUNDCLOUD_CLIENT_ID",
+        "SOUNDCLOUD_CLIENT_SECRET",
+        "SOUNDCLOUD_SCOPE",
+        "LISTENING_COMPANION_REDIRECT_URI",
+        "LISTENING_COMPANION_PREFERENCES_DB",
+        "LISTENING_COMPANION_VIEWER_HOST",
+        "LISTENING_COMPANION_VIEWER_PORT",
+        "LISTENING_COMPANION_CACHE_TTL_SECONDS",
+        "LISTENING_COMPANION_OAUTH_STATE_TTL_SECONDS",
+        "LISTENING_COMPANION_REQUEST_TIMEOUT_SECONDS"
+      ]
+    }
+  }
+}

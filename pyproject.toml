@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "listening-companion"
+version = "0.1.0"
+description = "A privacy-first local SoundCloud listening companion with a direct MCP stdio server."
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+authors = [{name = "Listening Companion contributors"}]
+dependencies = []
+
+[project.optional-dependencies]
+# Optional for hosts that want the production MCP SDK. The direct stdio
+# implementation remains the default so the local MVP has no runtime dependency.
+mcp-sdk = ["mcp>=1.0"]
+dev = ["pytest>=8.0"]
+
+[project.scripts]
+listening-companion = "soundcloud_recommender.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

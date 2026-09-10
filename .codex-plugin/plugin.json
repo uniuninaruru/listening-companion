@@ -1,0 +1,37 @@
+{
+  "name": "soundcloud-recommender",
+  "version": "0.1.0+codex.20260910091246",
+  "description": "A local, read-only listening companion that turns an explicitly supplied preference profile and a connected SoundCloud account into private, rule-based recommendations.",
+  "author": {
+    "name": "Listening Companion contributors"
+  },
+  "license": "MIT",
+  "keywords": [
+    "listening",
+    "podcasts",
+    "recommendations",
+    "soundcloud",
+    "mcp",
+    "privacy"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Listening Companion",
+    "shortDescription": "Private, read-only listening discovery from a local viewer.",
+    "longDescription": "Listening Companion connects to SoundCloud only after explicit local authorization. It performs deterministic, rule-based discovery locally and returns the model only an app-owned result ID, count, status, and loopback viewer URL. Provider metadata remains in the authenticated local viewer and in-memory session cache.",
+    "developerName": "Listening Companion contributors",
+    "category": "Music",
+    "capabilities": [
+      "Read-only",
+      "Recommendations",
+      "Local viewer"
+    ],
+    "brandColor": "#FF5500",
+    "defaultPrompt": [
+      "Show my recent listening results in the local viewer.",
+      "Recommend podcasts from my saved preference profile.",
+      "Search for listening ideas without exposing provider metadata."
+    ]
+  },
+  "mcpServers": "./.mcp.json"
+}
